@@ -10,6 +10,8 @@ export interface MilkRecord {
   quantity: number; // in liters
   fat: number; // percentage
   snf: number; // Solids-Not-Fat
-  totalPrice: number;
+  degree: number; // 'egrre' or quality metric
+  pricePerLiter: number; // price per liter for this record
+  totalPrice: number; // calculated: quantity * pricePerLiter
   timestamp: string; // ISO date string
 }

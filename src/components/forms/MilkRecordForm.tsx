@@ -13,7 +13,8 @@ const milkRecordFormSchema = z.object({
   quantity: z.coerce.number().min(0.1, { message: "Quantity must be greater than 0." }),
   fat: z.coerce.number().min(0, { message: "Fat % cannot be negative." }).max(100, { message: "Fat % cannot exceed 100."}),
   snf: z.coerce.number().min(0, { message: "SNF cannot be negative." }),
-  // totalPrice is now calculated automatically
+  degree: z.coerce.number().min(0, {message: "Degree must be a positive number."}),
+  pricePerLiter: z.coerce.number().min(0, {message: "Price per liter must be a positive number."}),
 });
 
 export type MilkRecordFormValues = z.infer<typeof milkRecordFormSchema>;
@@ -30,6 +31,8 @@ export default function MilkRecordForm({ onSubmit, isLoading = false }: MilkReco
       quantity: '' as unknown as number, 
       fat: '' as unknown as number,      
       snf: '' as unknown as number,
+      degree: '' as unknown as number,
+      pricePerLiter: '' as unknown as number,
     },
   });
 
@@ -42,12 +45,12 @@ export default function MilkRecordForm({ onSubmit, isLoading = false }: MilkReco
     <Card className="mt-8 shadow-lg">
       <CardHeader>
         <CardTitle className="font-headline">Add New Milk Record</CardTitle>
-        <CardDescription>Enter the details for the new milk record. Total price will be calculated automatically.</CardDescription>
+        <CardDescription>Enter the details for the new milk record, including the price per liter. Total price will be calculated automatically.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <FormField
                 control={form.control}
                 name="quantity"
@@ -82,6 +85,32 @@ export default function MilkRecordForm({ onSubmit, isLoading = false }: MilkReco
                     <FormLabel>SNF (Solids-Not-Fat)</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.1" placeholder="e.g. 8.5" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : parseFloat(e.target.value))} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="degree"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Degree</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.1" placeholder="e.g. 28.0" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : parseFloat(e.target.value))} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="pricePerLiter"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Price / Liter (₹)</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" placeholder="e.g. 35.50" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : parseFloat(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

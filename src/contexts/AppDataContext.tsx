@@ -6,10 +6,9 @@ import { createContext, useContext, ReactNode } from 'react';
 import useClientStorage from '@/hooks/useClientStorage';
 import { CUSTOMERS_KEY, MILK_RECORDS_KEY } from '@/lib/storageKeys';
 import { v4 as uuidv4 } from 'uuid';
-import { PRICE_PER_LITER } from '@/lib/constants';
 
 // Define more specific input type for adding milk records
-type MilkRecordInputData = Pick<MilkRecord, 'quantity' | 'fat' | 'snf' | 'customerId'>;
+type MilkRecordInputData = Pick<MilkRecord, 'quantity' | 'fat' | 'snf' | 'degree' | 'pricePerLiter' | 'customerId'>;
 
 interface AppDataContextType {
   customers: Customer[];
@@ -46,7 +45,7 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addMilkRecord = (recordData: MilkRecordInputData): MilkRecord => {
-    const totalPrice = recordData.quantity * PRICE_PER_LITER;
+    const totalPrice = recordData.quantity * recordData.pricePerLiter;
     const newRecord: MilkRecord = { 
       ...recordData, 
       id: uuidv4(), 

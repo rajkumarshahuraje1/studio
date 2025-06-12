@@ -3,7 +3,7 @@ import type { MilkRecord } from '@/lib/types';
 import { format } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Droplet, Percent, Sigma, IndianRupee, CalendarDays, Trash2 } from 'lucide-react';
+import { Droplet, Percent, Sigma, IndianRupee, CalendarDays, Trash2, Tag, TrendingUp } from 'lucide-react';
 
 interface MilkRecordListItemProps {
   record: MilkRecord;
@@ -13,28 +13,36 @@ interface MilkRecordListItemProps {
 export default function MilkRecordListItem({ record, onDelete }: MilkRecordListItemProps) {
   return (
     <Card className="mb-3 transition-all hover:shadow-md">
-      <CardContent className="pt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 items-center text-sm">
-        <div className="flex items-center" title="Date">
+      <CardContent className="pt-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 items-center text-sm">
+        <div className="flex items-center col-span-2 sm:col-span-1 lg:col-span-2" title="Date">
           <CalendarDays className="h-4 w-4 mr-2 text-primary" />
           <span>{format(new Date(record.timestamp), 'dd-MM-yyyy HH:mm')}</span>
         </div>
         <div className="flex items-center" title="Quantity">
           <Droplet className="h-4 w-4 mr-2 text-primary" />
-          <span>{record.quantity} L</span>
+          <span>{record.quantity.toFixed(1)} L</span>
         </div>
         <div className="flex items-center" title="Fat">
           <Percent className="h-4 w-4 mr-2 text-primary" />
-          <span>{record.fat}%</span>
+          <span>{record.fat.toFixed(1)}%</span>
         </div>
         <div className="flex items-center" title="SNF">
           <Sigma className="h-4 w-4 mr-2 text-primary" />
-          <span>{record.snf}</span>
+          <span>{record.snf.toFixed(1)}</span>
+        </div>
+        <div className="flex items-center" title="Degree">
+          <TrendingUp className="h-4 w-4 mr-2 text-primary" />
+          <span>{record.degree.toFixed(1)}</span>
+        </div>
+        <div className="flex items-center" title="Price Per Liter">
+          <Tag className="h-4 w-4 mr-2 text-primary" />
+          <span>₹{record.pricePerLiter.toFixed(2)}</span>
         </div>
         <div className="flex items-center font-semibold" title="Total Price">
           <IndianRupee className="h-4 w-4 mr-1 text-primary" />
           <span>{record.totalPrice.toFixed(2)}</span>
         </div>
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end lg:col-start-8">
           {onDelete && (
             <Button 
               variant="ghost" 
