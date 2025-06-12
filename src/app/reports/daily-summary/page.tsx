@@ -12,7 +12,7 @@ import { Calendar as CalendarIcon, Droplet, IndianRupee, Sunrise, Sunset, Users,
 import { format, startOfDay, parseISO } from 'date-fns';
 import type { MilkRecord, Customer } from '@/lib/types';
 import jsPDF from 'jspdf';
-// import 'jspdf-autotable'; // Import for side effects to extend jsPDF - Temporarily commented out
+// import 'jspdf-autotable'; // Temporarily commented out due to build issues
 import { useToast } from '@/hooks/use-toast';
 
 interface DailyTotals {
@@ -107,7 +107,7 @@ export default function DailySummaryPage() {
 
     // Temporarily disable autotable due to build issues
     doc.setFontSize(10);
-    doc.text("Detailed records table generation is temporarily disabled due to a build issue.", 14, currentY);
+    doc.text("Detailed records table generation is temporarily disabled.", 14, currentY);
     currentY += 10;
     doc.text("This section would normally contain a table of all milk records for the day.", 14, currentY);
 

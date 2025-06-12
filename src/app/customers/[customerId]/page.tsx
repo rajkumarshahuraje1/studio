@@ -262,14 +262,20 @@ export default function CustomerDetailPage() {
       tableRows.push(recordData);
     });
 
-    (doc as any).autoTable({ 
-      head: [tableColumn],
-      body: tableRows,
-      startY: currentY, 
-      theme: 'striped',
-      headStyles: { fillColor: [93, 16, 67] }, 
-      styles: { fontSize: 8 },
-    });
+    if (typeof (doc as any).autoTable === 'function') {
+      (doc as any).autoTable({ 
+        head: [tableColumn],
+        body: tableRows,
+        startY: currentY, 
+        theme: 'striped',
+        headStyles: { fillColor: [93, 16, 67] }, 
+        styles: { fontSize: 8 },
+      });
+    } else {
+      doc.setFontSize(10);
+      doc.text("Detailed records table feature (autoTable) is currently unavailable.", 14, currentY);
+      currentY += 10;
+    }
     */
     
     doc.setFontSize(10);
