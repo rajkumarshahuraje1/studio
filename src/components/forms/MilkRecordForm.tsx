@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from 'react-hook-form';
@@ -26,10 +27,10 @@ export default function MilkRecordForm({ onSubmit, isLoading = false }: MilkReco
   const form = useForm<MilkRecordFormValues>({
     resolver: zodResolver(milkRecordFormSchema),
     defaultValues: {
-      quantity: undefined, // Use undefined for zod coerce to work correctly with empty strings
-      fat: undefined,
-      snf: undefined,
-      totalPrice: undefined,
+      quantity: '' as unknown as number, // Initialize with empty string for controlled input
+      fat: '' as unknown as number,      // Zod will coerce to number
+      snf: '' as unknown as number,
+      totalPrice: '' as unknown as number,
     },
   });
 
@@ -50,7 +51,7 @@ export default function MilkRecordForm({ onSubmit, isLoading = false }: MilkReco
                   <FormItem>
                     <FormLabel>Quantity (Liters)</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.1" placeholder="e.g. 5.5" {...field} />
+                      <Input type="number" step="0.1" placeholder="e.g. 5.5" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : parseFloat(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -63,7 +64,7 @@ export default function MilkRecordForm({ onSubmit, isLoading = false }: MilkReco
                   <FormItem>
                     <FormLabel>Fat Percentage (%)</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.1" placeholder="e.g. 6.5" {...field} />
+                      <Input type="number" step="0.1" placeholder="e.g. 6.5" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : parseFloat(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -76,7 +77,7 @@ export default function MilkRecordForm({ onSubmit, isLoading = false }: MilkReco
                   <FormItem>
                     <FormLabel>SNF (Solids-Not-Fat)</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.1" placeholder="e.g. 8.5" {...field} />
+                      <Input type="number" step="0.1" placeholder="e.g. 8.5" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : parseFloat(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -89,7 +90,7 @@ export default function MilkRecordForm({ onSubmit, isLoading = false }: MilkReco
                   <FormItem>
                     <FormLabel>Total Price (₹)</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" placeholder="e.g. 200" {...field} />
+                      <Input type="number" step="0.01" placeholder="e.g. 200" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : parseFloat(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
