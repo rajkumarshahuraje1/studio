@@ -1,8 +1,9 @@
+
 "use client";
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Home, Users, PlusCircle } from 'lucide-react';
+import { Home, Users, PlusCircle, CalendarDays } from 'lucide-react';
 
 // Minimalist dairy icon SVG
 const DairyIcon = () => (
@@ -24,17 +25,23 @@ export default function Header() {
           <DairyIcon />
           <span>DairySMS</span>
         </Link>
-        <nav className="flex items-center gap-2">
+        <nav className="flex items-center gap-1 sm:gap-2 flex-wrap">
           <Button variant="ghost" size="sm" asChild>
             <Link href="/">
-              <Home className="mr-2 h-4 w-4" />
+              <Home className="mr-1 sm:mr-2 h-4 w-4" />
               Customers
             </Link>
           </Button>
           <Button variant="ghost" size="sm" asChild>
             <Link href="/customers/add">
-              <PlusCircle className="mr-2 h-4 w-4" />
+              <PlusCircle className="mr-1 sm:mr-2 h-4 w-4" />
               Add Customer
+            </Link>
+          </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/reports/daily-summary">
+              <CalendarDays className="mr-1 sm:mr-2 h-4 w-4" />
+              Daily Summary
             </Link>
           </Button>
         </nav>

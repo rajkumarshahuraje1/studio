@@ -1,8 +1,12 @@
+
 export interface Customer {
   id: string;
   name: string;
   contactNumber: string;
 }
+
+export type MilkSession = 'morning' | 'evening';
+export type PaymentStatus = 'pending' | 'paid';
 
 export interface MilkRecord {
   id: string;
@@ -14,4 +18,6 @@ export interface MilkRecord {
   pricePerLiter: number; // price per liter for this record
   totalPrice: number; // calculated: quantity * pricePerLiter
   timestamp: string; // ISO date string
+  session: MilkSession;
+  paymentStatus: PaymentStatus;
 }
