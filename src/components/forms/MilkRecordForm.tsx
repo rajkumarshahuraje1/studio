@@ -13,10 +13,10 @@ const milkRecordFormSchema = z.object({
   quantity: z.coerce.number().min(0.1, { message: "Quantity must be greater than 0." }),
   fat: z.coerce.number().min(0, { message: "Fat % cannot be negative." }).max(100, { message: "Fat % cannot exceed 100."}),
   snf: z.coerce.number().min(0, { message: "SNF cannot be negative." }),
-  totalPrice: z.coerce.number().min(0, { message: "Total price cannot be negative." }),
+  // totalPrice is now calculated automatically
 });
 
-type MilkRecordFormValues = z.infer<typeof milkRecordFormSchema>;
+export type MilkRecordFormValues = z.infer<typeof milkRecordFormSchema>;
 
 interface MilkRecordFormProps {
   onSubmit: (data: MilkRecordFormValues) => void;
@@ -27,22 +27,26 @@ export default function MilkRecordForm({ onSubmit, isLoading = false }: MilkReco
   const form = useForm<MilkRecordFormValues>({
     resolver: zodResolver(milkRecordFormSchema),
     defaultValues: {
-      quantity: '' as unknown as number, // Initialize with empty string for controlled input
-      fat: '' as unknown as number,      // Zod will coerce to number
+      quantity: '' as unknown as number, 
+      fat: '' as unknown as number,      
       snf: '' as unknown as number,
-      totalPrice: '' as unknown as number,
     },
   });
+
+  const handleFormSubmit = (values: MilkRecordFormValues) => {
+    onSubmit(values);
+    form.reset(); // Reset form after successful submission
+  };
 
   return (
     <Card className="mt-8 shadow-lg">
       <CardHeader>
         <CardTitle className="font-headline">Add New Milk Record</CardTitle>
-        <CardDescription>Enter the details for the new milk record.</CardDescription>
+        <CardDescription>Enter the details for the new milk record. Total price will be calculated automatically.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
@@ -78,19 +82,6 @@ export default function MilkRecordForm({ onSubmit, isLoading = false }: MilkReco
                     <FormLabel>SNF (Solids-Not-Fat)</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.1" placeholder="e.g. 8.5" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : parseFloat(e.target.value))} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="totalPrice"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Total Price (₹)</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.01" placeholder="e.g. 200" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : parseFloat(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

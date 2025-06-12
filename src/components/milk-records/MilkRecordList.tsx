@@ -1,13 +1,15 @@
+
 import type { MilkRecord } from '@/lib/types';
 import MilkRecordListItem from './MilkRecordListItem';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { PackageOpen } from 'lucide-react'; // Using PackageOpen as a generic "records" icon
+import { PackageOpen } from 'lucide-react'; 
 
 interface MilkRecordListProps {
   records: MilkRecord[];
+  onDeleteRecord?: (recordId: string) => void;
 }
 
-export default function MilkRecordList({ records }: MilkRecordListProps) {
+export default function MilkRecordList({ records, onDeleteRecord }: MilkRecordListProps) {
   if (records.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -18,10 +20,10 @@ export default function MilkRecordList({ records }: MilkRecordListProps) {
   }
 
   return (
-    <ScrollArea className="h-[400px] pr-4"> {/* Added pr-4 for scrollbar spacing */}
+    <ScrollArea className="h-[400px] pr-4"> 
       <div className="space-y-3">
         {records.map((record) => (
-          <MilkRecordListItem key={record.id} record={record} />
+          <MilkRecordListItem key={record.id} record={record} onDelete={onDeleteRecord} />
         ))}
       </div>
     </ScrollArea>
