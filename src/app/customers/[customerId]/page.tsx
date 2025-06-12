@@ -9,7 +9,7 @@ import type { MilkRecordFormValues } from '@/components/forms/MilkRecordForm';
 import MilkRecordList from '@/components/milk-records/MilkRecordList';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { User, Phone, Send, ArrowLeft, Trash2, FileText, BarChart3, Droplet, Percent, Sigma, TrendingUp as DegreeIcon } from 'lucide-react';
+import { User, Phone, Send, ArrowLeft, Trash2, FileText, BarChart3, Droplet, Percent, Sigma, TrendingUp as DegreeIcon, IndianRupee } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect, useMemo } from 'react';
 import type { Customer, MilkRecord } from '@/lib/types';
@@ -77,9 +77,9 @@ export default function CustomerDetailPage() {
   const summaryData: SummaryData | null = useMemo(() => {
     if (!records || records.length === 0) return null;
     const totalQuantity = records.reduce((sum, r) => sum + r.quantity, 0);
-    const totalFat = records.reduce((sum, r) => sum + r.fat * r.quantity, 0); // Weighted average for fat
-    const totalSnf = records.reduce((sum, r) => sum + r.snf * r.quantity, 0); // Weighted average for snf
-    const totalDegree = records.reduce((sum, r) => sum + r.degree * r.quantity, 0); // Weighted average for degree
+    const totalFat = records.reduce((sum, r) => sum + r.fat * r.quantity, 0); 
+    const totalSnf = records.reduce((sum, r) => sum + r.snf * r.quantity, 0); 
+    const totalDegree = records.reduce((sum, r) => sum + r.degree * r.quantity, 0); 
     const totalRevenue = records.reduce((sum, r) => sum + r.totalPrice, 0);
     const recordCount = records.length;
 
@@ -226,11 +226,10 @@ export default function CustomerDetailPage() {
       tableRows.push(recordData);
     });
 
-    // Use (doc as any).autoTable as jspdf-autotable extends jsPDF instance.
     (doc as any).autoTable({ 
       head: [tableColumn],
       body: tableRows,
-      startY: summaryData ? 75 : 45,
+      startY: summaryData ? 80 : 45, 
       theme: 'striped',
       headStyles: { fillColor: [93, 16, 67] }, 
       styles: { fontSize: 8 },
@@ -314,7 +313,7 @@ export default function CustomerDetailPage() {
                 <span className="font-medium">{summaryData.avgDegree.toFixed(2)}</span>
               </div>
                <div className="flex items-center justify-between pt-1 border-t mt-2">
-                <span className="flex items-center text-muted-foreground font-semibold">Total Revenue:</span>
+                <span className="flex items-center text-muted-foreground font-semibold"><IndianRupee className="mr-1.5 h-4 w-4" />Total Revenue:</span>
                 <span className="font-bold text-primary">₹{summaryData.totalRevenue.toFixed(2)}</span>
               </div>
             </CardContent>
