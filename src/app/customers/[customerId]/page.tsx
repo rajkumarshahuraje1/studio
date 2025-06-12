@@ -15,7 +15,7 @@ import { useState, useEffect, useMemo } from 'react';
 import type { Customer, MilkRecord } from '@/lib/types';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable'; // For table generation in PDF
+import 'jspdf-autotable'; // Import for side effects to extend jsPDF
 
 import {
   AlertDialog,
@@ -226,12 +226,13 @@ export default function CustomerDetailPage() {
       tableRows.push(recordData);
     });
 
-    (doc as any).autoTable({
+    // Use (doc as any).autoTable as jspdf-autotable extends jsPDF instance.
+    (doc as any).autoTable({ 
       head: [tableColumn],
       body: tableRows,
       startY: summaryData ? 75 : 45,
       theme: 'striped',
-      headStyles: { fillColor: [93, 16, 67] }, // Muted Green from theme
+      headStyles: { fillColor: [93, 16, 67] }, 
       styles: { fontSize: 8 },
     });
     
