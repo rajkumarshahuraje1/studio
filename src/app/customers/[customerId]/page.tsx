@@ -15,7 +15,7 @@ import { useState, useEffect, useMemo } from 'react';
 import type { Customer, MilkRecord } from '@/lib/types';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable'; // Import for side effects to extend jsPDF
+// import 'jspdf-autotable'; // Temporarily commented out due to build issues
 
 import {
   AlertDialog,
@@ -196,9 +196,12 @@ export default function CustomerDetailPage() {
     doc.text(`Contact: ${customer.contactNumber}`, 14, 30);
     doc.text(`Report Date: ${format(new Date(), 'dd-MM-yyyy HH:mm')}`, 14, 36);
 
+    let currentY = 45;
+
     if (summaryData) {
       doc.setFontSize(14);
-      doc.text("Overall Summary", 14, 46);
+      doc.text("Overall Summary", 14, currentY);
+      currentY += 6;
       doc.setFontSize(10);
       const summaryText = [
         `Total Milk Collected: ${summaryData.totalQuantity.toFixed(2)} Liters`,
@@ -207,9 +210,15 @@ export default function CustomerDetailPage() {
         `Average Degree: ${summaryData.avgDegree.toFixed(2)}`,
         `Total Revenue: ₹${summaryData.totalRevenue.toFixed(2)} from ${summaryData.recordCount} records`
       ];
-      summaryText.forEach((text, index) => doc.text(text, 14, 52 + (index * 5)));
+      summaryText.forEach((text) => {
+        doc.text(text, 14, currentY);
+        currentY += 5;
+      });
+      currentY += 5; // Extra space before table
     }
     
+    // Temporarily comment out autotable usage
+    /*
     const tableColumn = ["Date", "Qty (L)", "Fat (%)", "SNF", "Degree", "Price/L (₹)", "Total (₹)"];
     const tableRows: (string | number)[][] = [];
 
@@ -229,14 +238,22 @@ export default function CustomerDetailPage() {
     (doc as any).autoTable({ 
       head: [tableColumn],
       body: tableRows,
-      startY: summaryData ? 80 : 45, 
+      startY: currentY, 
       theme: 'striped',
-      headStyles: { fillColor: [93, 16, 67] }, 
+      headStyles: { fillColor: [93, 16, 67] }, // Using a dark color for header
       styles: { fontSize: 8 },
     });
+    */
     
+    // Placeholder for manual table or if autotable is fixed
+    doc.setFontSize(10);
+    doc.text("Detailed records table generation is temporarily disabled.", 14, currentY);
+    currentY += 10;
+    doc.text("This section would normally contain a table of all milk records.", 14, currentY);
+
+
     doc.save(`${customer.name}_milk_report_${format(new Date(), 'yyyyMMdd')}.pdf`);
-    toast({ title: "PDF Generated", description: "Report downloaded successfully." });
+    toast({ title: "PDF Generated (Limited)", description: "Report downloaded. Table feature pending fix." });
   };
 
 
@@ -374,3 +391,5 @@ export default function CustomerDetailPage() {
     </div>
   );
 }
+
+    
