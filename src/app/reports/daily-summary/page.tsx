@@ -8,9 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarIcon, Droplet, IndianRupee, Sunrise, Sunset, Users } from 'lucide-react';
-import { format, startOfDay } from 'date-fns';
-import type { MilkRecord } from '@/lib/types';
+import { Calendar as CalendarIcon, Droplet, IndianRupee, Sunrise, Sunset, Users, FileText } from 'lucide-react';
+import { format, startOfDay, parseISO } from 'date-fns';
+import type { MilkRecord, Customer } from '@/lib/types';
+import jsPDF from 'jspdf';
+// import 'jspdf-autotable'; // Temporarily disabled due to build issues
+import { useToast } from '@/hooks/use-toast';
 
 interface DailyTotals {
   totalQuantity: number;
@@ -22,7 +25,8 @@ interface DailyTotals {
 }
 
 export default function DailySummaryPage() {
-  const { getMilkRecordsByDate, customers } = useAppData();
+  const { getMilkRecordsByDate, getCustomerById } = useAppData(); // Added getCustomerById
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(startOfDay(new Date()));
 
   const dailyRecords = useMemo(() => {
@@ -62,32 +66,118 @@ export default function DailySummaryPage() {
     setSelectedDate(date ? startOfDay(date) : undefined);
   }
 
+  const handleGenerateDailyPdf = () => {
+    if (!selectedDate || !dailyRecords.length) {
+      toast({ title: "No data", description: "No records to generate PDF for this date.", variant: "default" });
+      return;
+    }
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    
+    doc.setFontSize(18);
+    doc.text("Daily Milk Collection Summary", pageWidth / 2, 20, { align: 'center' });
+    doc.setFontSize(12);
+    doc.text(`Date: ${format(selectedDate, 'PPP')}`, 14, 30);
+    doc.text(`Report Generated: ${format(new Date(), 'dd-MM-yyyy HH:mm')}`, 14, 36);
+
+    let currentY = 45;
+
+    doc.setFontSize(14);
+    doc.text("Summary Statistics", 14, currentY);
+    currentY += 6;
+    doc.setFontSize(10);
+    const summaryText = [
+      `Total Milk Collected: ${dailyTotals.totalQuantity.toFixed(2)} Liters`,
+      `Morning Collection: ${dailyTotals.morningQuantity.toFixed(2)} Liters`,
+      `Evening Collection: ${dailyTotals.eveningQuantity.toFixed(2)} Liters`,
+      `Total Revenue: ₹${dailyTotals.totalRevenue.toFixed(2)}`,
+      `Total Records: ${dailyTotals.recordCount}`,
+      `Contributing Customers: ${dailyTotals.customerCount}`,
+    ];
+    summaryText.forEach((text) => {
+      doc.text(text, 14, currentY);
+      currentY += 5;
+    });
+    currentY += 5; 
+
+    // Temporarily disable autotable for detailed records
+    doc.setFontSize(10);
+    doc.text("Detailed records table generation is temporarily disabled.", 14, currentY);
+    currentY += 10;
+    doc.text("This section would normally contain a table of all milk records for the day.", 14, currentY);
+
+    /*
+    const tableColumn = ["Customer", "Session", "Qty (L)", "Fat (%)", "SNF", "Degree", "Price/L (₹)", "Total (₹)", "Payment"];
+    const tableRows: (string | number)[][] = [];
+
+    dailyRecords.forEach(record => {
+      const customer = getCustomerById(record.customerId);
+      const recordData = [
+        customer ? customer.name : 'N/A',
+        record.session.charAt(0).toUpperCase() + record.session.slice(1),
+        record.quantity.toFixed(1),
+        record.fat.toFixed(1),
+        record.snf.toFixed(1),
+        record.degree.toFixed(1),
+        record.pricePerLiter.toFixed(2),
+        record.totalPrice.toFixed(2),
+        record.paymentStatus.charAt(0).toUpperCase() + record.paymentStatus.slice(1)
+      ];
+      tableRows.push(recordData);
+    });
+
+    if (typeof (doc as any).autoTable === 'function') {
+      (doc as any).autoTable({ 
+        head: [tableColumn],
+        body: tableRows,
+        startY: currentY, 
+        theme: 'striped',
+        headStyles: { fillColor: [93, 16, 67] }, 
+        styles: { fontSize: 8 },
+      });
+    } else {
+      doc.setFontSize(10);
+      doc.text("Detailed records table feature is currently unavailable for PDF.", 14, currentY);
+    }
+    */
+
+    doc.save(`daily_milk_summary_${format(selectedDate, 'yyyyMMdd')}.pdf`);
+    toast({ title: "PDF Generated (Limited)", description: "Daily summary PDF downloaded. Table feature pending fix." });
+  };
+
+
   return (
     <div>
       <PageHeader 
         title="Daily Milk Summary" 
         icon={CalendarIcon}
         actions={
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className="w-[280px] justify-start text-left font-normal"
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={handleDateSelect}
-                initialFocus
-                disabled={(date) => date > new Date() || date < new Date("2000-01-01")}
-              />
-            </PopoverContent>
-          </Popover>
+          <div className="flex flex-wrap gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className="w-[240px] justify-start text-left font-normal"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={handleDateSelect}
+                  initialFocus
+                  disabled={(date) => date > new Date() || date < new Date("2000-01-01")}
+                />
+              </PopoverContent>
+            </Popover>
+            <Button onClick={handleGenerateDailyPdf} variant="outline" disabled={!selectedDate || dailyRecords.length === 0}>
+              <FileText className="mr-2 h-4 w-4" /> Download PDF
+            </Button>
+          </div>
         }
       />
 
