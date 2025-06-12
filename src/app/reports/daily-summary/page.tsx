@@ -12,7 +12,7 @@ import { Calendar as CalendarIcon, Droplet, IndianRupee, Sunrise, Sunset, Users,
 import { format, startOfDay, parseISO } from 'date-fns';
 import type { MilkRecord, Customer } from '@/lib/types';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable'; // Import for side effects to extend jsPDF
+// import 'jspdf-autotable'; // Import for side effects to extend jsPDF - Temporarily commented out
 import { useToast } from '@/hooks/use-toast';
 
 interface DailyTotals {
@@ -105,50 +105,57 @@ export default function DailySummaryPage() {
     doc.text("Detailed Records", 14, currentY);
     currentY += 8;
 
-    const tableColumn = ["Customer", "Session", "Time", "Qty (L)", "Fat (%)", "SNF", "Degree", "Price/L (₹)", "Total (₹)", "Payment"];
-    const tableRows: (string | number)[][] = [];
+    // Temporarily disable autotable due to build issues
+    doc.setFontSize(10);
+    doc.text("Detailed records table generation is temporarily disabled due to a build issue.", 14, currentY);
+    currentY += 10;
+    doc.text("This section would normally contain a table of all milk records for the day.", 14, currentY);
 
-    dailyRecords.forEach(record => {
-      const customer = getCustomerById(record.customerId);
-      const recordData = [
-        customer ? customer.name : 'N/A',
-        record.session.charAt(0).toUpperCase() + record.session.slice(1),
-        format(new Date(record.timestamp), 'HH:mm'),
-        record.quantity.toFixed(1),
-        record.fat.toFixed(1),
-        record.snf.toFixed(1),
-        record.degree.toFixed(1),
-        record.pricePerLiter.toFixed(2),
-        record.totalPrice.toFixed(2),
-        record.paymentStatus.charAt(0).toUpperCase() + record.paymentStatus.slice(1)
-      ];
-      tableRows.push(recordData);
-    });
-    
-    // Check if autoTable method exists on the doc object
+    /*
+    // Check if autoTable is available (it might not be if jspdf-autotable failed to load/extend)
     if (typeof (doc as any).autoTable === 'function') {
-        (doc as any).autoTable({ 
-            head: [tableColumn],
-            body: tableRows,
-            startY: currentY, 
-            theme: 'striped',
-            headStyles: { fillColor: [93, 16, 67] }, // Example primary color
-            styles: { fontSize: 8, cellPadding: 1.5 },
-            columnStyles: {
-                0: { cellWidth: 30 }, // Customer Name
-                2: { cellWidth: 15 }, // Time
-            }
-        });
-    } else {
-        doc.setFontSize(10);
-        doc.text("Detailed records table feature is currently unavailable (autoTable function not found).", 14, currentY);
-        currentY += 10;
-        doc.text("Please ensure jspdf-autotable is correctly installed and imported.", 14, currentY);
-    }
+      const tableColumn = ["Customer", "Session", "Time", "Qty (L)", "Fat (%)", "SNF", "Degree", "Price/L (₹)", "Total (₹)", "Payment"];
+      const tableRows: (string | number)[][] = [];
 
+      dailyRecords.forEach(record => {
+        const customer = getCustomerById(record.customerId);
+        const recordData = [
+          customer ? customer.name : 'N/A',
+          record.session.charAt(0).toUpperCase() + record.session.slice(1),
+          format(new Date(record.timestamp), 'HH:mm'),
+          record.quantity.toFixed(1),
+          record.fat.toFixed(1),
+          record.snf.toFixed(1),
+          record.degree.toFixed(1),
+          record.pricePerLiter.toFixed(2),
+          record.totalPrice.toFixed(2),
+          record.paymentStatus.charAt(0).toUpperCase() + record.paymentStatus.slice(1)
+        ];
+        tableRows.push(recordData);
+      });
+      
+      (doc as any).autoTable({ 
+          head: [tableColumn],
+          body: tableRows,
+          startY: currentY, 
+          theme: 'striped',
+          headStyles: { fillColor: [93, 16, 67] }, // Using an example primary color shade
+          styles: { fontSize: 8, cellPadding: 1.5 },
+          columnStyles: {
+              0: { cellWidth: 30 }, // Customer name
+              2: { cellWidth: 15 }, // Time
+          }
+      });
+    } else {
+      doc.setFontSize(10);
+      doc.text("Detailed records table feature is currently unavailable (autoTable function not found).", 14, currentY);
+      currentY += 10;
+      doc.text("Please ensure jspdf-autotable is correctly installed and imported.", 14, currentY);
+    }
+    */
 
     doc.save(`daily_milk_summary_${format(selectedDate, 'yyyyMMdd')}.pdf`);
-    toast({ title: "PDF Generated", description: "Daily summary PDF with detailed records downloaded." });
+    toast({ title: "PDF Generated (Limited)", description: "Daily summary PDF downloaded. Detailed table pending fix." });
   };
 
 
