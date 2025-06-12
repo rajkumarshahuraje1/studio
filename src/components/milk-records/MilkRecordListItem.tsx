@@ -16,7 +16,7 @@ export default function MilkRecordListItem({ record, onDelete, onTogglePaymentSt
   const SessionIcon = record.session === 'morning' ? Sunrise : Sunset;
   const paymentStatusText = record.paymentStatus === 'paid' ? "Paid" : "Pending";
   const paymentButtonText = record.paymentStatus === 'paid' ? "Mark Pending" : "Mark Paid";
-  const paymentButtonIcon = record.paymentStatus === 'paid' ? CreditCard : CheckCircle2;
+  const PaymentButtonIcon = record.paymentStatus === 'paid' ? CreditCard : CheckCircle2;
 
   return (
     <Card className="mb-3 transition-all hover:shadow-md">
@@ -66,7 +66,7 @@ export default function MilkRecordListItem({ record, onDelete, onTogglePaymentSt
               )}
               title={`Status: ${paymentStatusText}. Click to ${paymentButtonText.toLowerCase()}.`}
             >
-              <paymentButtonIcon className="h-3.5 w-3.5 mr-1.5" />
+              <PaymentButtonIcon className="h-3.5 w-3.5 mr-1.5" />
               {paymentStatusText}
             </Button>
           )}
