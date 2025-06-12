@@ -41,12 +41,22 @@ interface SessionSummaryData {
 const calculateSessionSummary = (records: MilkRecord[]): SessionSummaryData | null => {
   if (!records || records.length === 0) return null;
   
-  const totalQuantity = records.reduce((sum, r) => sum + r.quantity, 0);
-  const totalFatWeighted = records.reduce((sum, r) => sum + r.fat * r.quantity, 0); 
-  const totalSnfWeighted = records.reduce((sum, r) => sum + r.snf * r.quantity, 0); 
-  const totalDegreeWeighted = records.reduce((sum, r) => sum + r.degree * r.quantity, 0); 
-  const totalRevenue = records.reduce((sum, r) => sum + r.totalPrice, 0);
-  const recordCount = records.length;
+  const validRecords = records.filter(r => 
+    typeof r.quantity === 'number' && !isNaN(r.quantity) &&
+    typeof r.fat === 'number' && !isNaN(r.fat) &&
+    typeof r.snf === 'number' && !isNaN(r.snf) &&
+    typeof r.degree === 'number' && !isNaN(r.degree) &&
+    typeof r.totalPrice === 'number' && !isNaN(r.totalPrice)
+  );
+
+  if (validRecords.length === 0) return null;
+
+  const totalQuantity = validRecords.reduce((sum, r) => sum + r.quantity, 0);
+  const totalFatWeighted = validRecords.reduce((sum, r) => sum + r.fat * r.quantity, 0); 
+  const totalSnfWeighted = validRecords.reduce((sum, r) => sum + r.snf * r.quantity, 0); 
+  const totalDegreeWeighted = validRecords.reduce((sum, r) => sum + r.degree * r.quantity, 0); 
+  const totalRevenue = validRecords.reduce((sum, r) => sum + r.totalPrice, 0);
+  const recordCount = validRecords.length;
 
   return {
     totalQuantity,
@@ -105,17 +115,50 @@ export default function CustomerDetailPage() {
   const morningSummaryData = useMemo(() => calculateSessionSummary(morningRecords), [morningRecords]);
   const eveningSummaryData = useMemo(() => calculateSessionSummary(eveningRecords), [eveningRecords]);
 
+  const sendSmsForRecord = (record: MilkRecord) => {
+    if (!customer) return;
+    setIsSendingSMS(true); // Reuse existing state for general SMS activity
+
+    let smsBody = `New milk record for ${customer.name}:\n`;
+    smsBody += `Date: ${format(new Date(record.timestamp), 'dd/MM HH:mm')}\n`;
+    smsBody += `Session: ${record.session.charAt(0).toUpperCase() + record.session.slice(1)}\n`;
+    smsBody += `Qty: ${record.quantity.toFixed(1)}L\n`;
+    smsBody += `Fat: ${record.fat.toFixed(1)}%\n`;
+    smsBody += `PPL: ₹${record.pricePerLiter.toFixed(2)}\n`;
+    smsBody += `Total: ₹${record.totalPrice.toFixed(2)}`;
+
+    try {
+      const smsUri = `sms:${customer.contactNumber}?body=${encodeURIComponent(smsBody.trim())}`;
+      window.location.href = smsUri;
+      toast({
+        title: "SMS Prepared for New Record",
+        description: "Your SMS app should open. Please verify and send.",
+      });
+    } catch (error) {
+      console.error("Failed to initiate SMS for new record:", error);
+      toast({
+        title: "SMS Failed",
+        description: "Could not open SMS app automatically for the new record.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSendingSMS(false);
+    }
+  };
+
 
   const handleAddMilkRecord = async (data: MilkRecordFormValues) => {
     if (!customer) return;
     setIsLoadingRecord(true);
     try {
-      addMilkRecord({ ...data, customerId: customer.id });
+      const newRecord = addMilkRecord({ ...data, customerId: customer.id });
       setRecords(getMilkRecordsByCustomerId(customer.id)); 
       toast({
         title: "Success",
         description: "Milk record added successfully.",
       });
+      // Send SMS for the newly added record
+      sendSmsForRecord(newRecord);
     } catch (error) {
       console.error("Failed to add milk record:", error);
       toast({
@@ -205,11 +248,18 @@ export default function CustomerDetailPage() {
     });
   };
 
-  const handleGeneratePdf = () => {
+  const handleGeneratePdf = async () => {
     if (!customer || !records.length) {
       toast({ title: "No data", description: "No records to generate PDF.", variant: "default" });
       return;
     }
+
+    // Dynamically import jsPDF to avoid issues if window is not available server-side
+    const { default: jsPDF } = await import('jspdf');
+    // Dynamically import jspdf-autotable if needed and if issues persist,
+    // ensure it's also client-side only. For now, it's commented out.
+    // await import('jspdf-autotable');
+
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -298,7 +348,22 @@ export default function CustomerDetailPage() {
   }
 
   const SummaryCard = ({ title, data, icon: Icon }: { title: string, data: SessionSummaryData | null, icon?: React.ElementType }) => {
-    if (!data) return null;
+    if (!data) {
+      return (
+        <Card className="shadow-md">
+            <CardHeader>
+                <CardTitle className="font-headline flex items-center">
+                    {Icon && <Icon className="mr-2 h-5 w-5 text-primary"/>}
+                    {title}
+                </CardTitle>
+                 <CardDescription>No records for this session yet.</CardDescription>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+                Please add records to see a summary.
+            </CardContent>
+        </Card>
+      );
+    }
     return (
       <Card className="shadow-md">
         <CardHeader>
@@ -370,7 +435,7 @@ export default function CustomerDetailPage() {
               <span className="text-muted-foreground">Contact:</span>&nbsp;
               <span>{customer.contactNumber}</span>
             </div>
-            <Button onClick={handleSendSMSSummary} disabled={isSendingSMS || !overallSummaryData} size="sm" className="w-full sm:w-auto">
+            <Button onClick={handleSendSMSSummary} disabled={isSendingSMS || !overallSummaryData || records.length === 0} size="sm" className="w-full sm:w-auto">
               <Send className="mr-2 h-4 w-4" />
               {isSendingSMS ? 'Preparing SMS...' : 'Send SMS Summary (Overall)'}
             </Button>
