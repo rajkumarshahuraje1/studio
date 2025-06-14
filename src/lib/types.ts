@@ -21,3 +21,12 @@ export interface MilkRecord {
   session: MilkSession;
   paymentStatus: PaymentStatus;
 }
+
+// Added for authentication
+export interface User {
+  id: string;
+  username: string;
+  // In a real app, store a securely hashed password.
+  // For this prototype, we'll store it as is or use a very simple "hash".
+  passwordHash: string; 
+}

@@ -3,7 +3,9 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Home, Users, PlusCircle, CalendarDays } from 'lucide-react';
+import { Home, Users, PlusCircle, CalendarDays, LogIn, UserPlus, LogOut, UserCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter, usePathname } from 'next/navigation';
 
 // Minimalist dairy icon SVG
 const DairyIcon = () => (
@@ -18,32 +20,76 @@ const DairyIcon = () => (
 
 
 export default function Header() {
+  const { isAuthenticated, currentUser, logout, isLoading } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const handleLogout = () => {
+    logout();
+    // AuthContext logout already redirects to /login
+  };
+
+  // Hide header on login/signup pages
+  if (pathname === '/login' || pathname === '/signup') {
+    return null;
+  }
+
   return (
     <header className="bg-card shadow-md sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-        <Link href="/" className="flex items-center gap-2 text-xl font-bold font-headline text-primary-foreground hover:text-opacity-80 transition-opacity">
+      <div className="container mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center">
+        <Link href="/" className="flex items-center gap-2 text-xl font-bold font-headline text-primary-foreground hover:text-opacity-80 transition-opacity mb-2 sm:mb-0">
           <DairyIcon />
           <span>DairySMS</span>
         </Link>
-        <nav className="flex items-center gap-1 sm:gap-2 flex-wrap">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/">
-              <Home className="mr-1 sm:mr-2 h-4 w-4" />
-              Customers
-            </Link>
-          </Button>
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/customers/add">
-              <PlusCircle className="mr-1 sm:mr-2 h-4 w-4" />
-              Add Customer
-            </Link>
-          </Button>
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/reports/daily-summary">
-              <CalendarDays className="mr-1 sm:mr-2 h-4 w-4" />
-              Daily Summary
-            </Link>
-          </Button>
+        
+        <nav className="flex items-center gap-1 sm:gap-2 flex-wrap justify-center sm:justify-end">
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground">Loading user...</p>
+          ) : isAuthenticated && currentUser ? (
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/">
+                  <Home className="mr-1 sm:mr-2 h-4 w-4" />
+                  Customers
+                </Link>
+              </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/customers/add">
+                  <PlusCircle className="mr-1 sm:mr-2 h-4 w-4" />
+                  Add Customer
+                </Link>
+              </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/reports/daily-summary">
+                  <CalendarDays className="mr-1 sm:mr-2 h-4 w-4" />
+                  Daily Summary
+                </Link>
+              </Button>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground ml-2 border-l pl-2">
+                <UserCircle className="h-5 w-5" />
+                <span>{currentUser.username}</span>
+              </div>
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                <LogOut className="mr-1 sm:mr-2 h-4 w-4" />
+                Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/login">
+                  <LogIn className="mr-1 sm:mr-2 h-4 w-4" />
+                  Login
+                </Link>
+              </Button>
+              <Button variant="default" size="sm" asChild>
+                <Link href="/signup">
+                  <UserPlus className="mr-1 sm:mr-2 h-4 w-4" />
+                  Sign Up
+                </Link>
+              </Button>
+            </>
+          )}
         </nav>
       </div>
     </header>
