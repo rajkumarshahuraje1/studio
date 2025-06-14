@@ -31,15 +31,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if currentUser exists in localStorage on initial load
+    // This effect runs once on mount to initialize user state from localStorage.
+    // It depends on setCurrentUserInternal, which should now be stable from useClientStorage.
     const userFromStorage = window.localStorage.getItem(AUTH_CURRENT_USER_KEY);
     if (userFromStorage) {
       try {
         setCurrentUserInternal(JSON.parse(userFromStorage));
       } catch (e) {
-        setCurrentUserInternal(null); // Clear if parsing fails
+        // If parsing fails or item is invalid, ensure currentUser is null.
+        setCurrentUserInternal(null); 
       }
     }
+    // Ensure isLoading is set to false after the attempt to load from storage.
     setIsLoading(false);
   }, [setCurrentUserInternal]);
 
@@ -50,7 +53,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (user) {
       setCurrentUserInternal(user);
       toast({ title: "Login Successful", description: `Welcome back, ${user.username}!` });
-      router.push('/');
+      router.push('/'); // Changed from replace to push for better history, though replace is fine for login.
       return true;
     }
     toast({ title: "Login Failed", description: "Invalid username or password.", variant: "destructive" });
@@ -77,12 +80,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const isAuthenticated = !!currentUser;
-
-  if (isLoading && typeof window !== 'undefined' && !window.localStorage.getItem(AUTH_CURRENT_USER_KEY)) {
-     // Still determining auth state on the client, don't flash content if not yet determined
-     // and no user in local storage (prevents flashing protected content before redirect)
-  }
-
 
   return (
     <AuthContext.Provider value={{ currentUser, isAuthenticated, isLoading, login, signup, logout }}>
