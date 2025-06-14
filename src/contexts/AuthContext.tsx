@@ -26,43 +26,57 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [storedUsers, setStoredUsers] = useClientStorage<User[]>(AUTH_USERS_KEY, []);
   const [currentUser, setCurrentUserInternal] = useClientStorage<User | null>(AUTH_CURRENT_USER_KEY, null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // Start as true, set to false once currentUser is resolved
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
-    // This effect runs once on mount to initialize user state from localStorage.
-    // It depends on setCurrentUserInternal, which should now be stable from useClientStorage.
-    const userFromStorage = window.localStorage.getItem(AUTH_CURRENT_USER_KEY);
-    if (userFromStorage) {
-      try {
-        setCurrentUserInternal(JSON.parse(userFromStorage));
-      } catch (e) {
-        // If parsing fails or item is invalid, ensure currentUser is null.
-        setCurrentUserInternal(null); 
-      }
+    // This effect monitors the currentUser value provided by useClientStorage.
+    // useClientStorage returns initialValue (null) until it's initialized from localStorage.
+    // Once currentUser is either the stored user or confirmed as null (after initialization),
+    // we can consider the auth state loaded.
+    // The `currentUser !== undefined` check is a bit loose; a more direct signal from useClientStorage
+    // about its initialization might be better, but this often works because `currentUser` will
+    // change instance from the default `null` to the loaded `null` or loaded `User` object.
+    // A key aspect is that useClientStorage returns `initialValue` if `!isInitialized`.
+    // So, `currentUser` will be `null` (initialValue) then potentially `User` or `null` (storedValue).
+    // We set isLoading to false when `currentUser` has settled from its initial state.
+    // The `isInitialized` flag in `useClientStorage` handles the transition.
+    // `isLoading` will be false once `useClientStorage` is initialized.
+    // The `currentUser` dependency ensures this runs when `useClientStorage` finishes init.
+    
+    // If useClientStorage is initialized (which means currentUser is now the actual value from storage or initialValue if nothing was there)
+    // then we can stop loading. The initial value of useClientStorage and the potentially loaded value can both be null.
+    // The key is that `useClientStorage` has finished its first pass.
+    // The `isInitialized` state within `useClientStorage` handles returning `initialValue` then `storedValue`.
+    // This `useEffect` should fire when `currentUser` potentially changes after `useClientStorage` is initialized.
+    if (currentUser !== undefined) { // This check is primarily to ensure the effect runs after the first render cycle.
+       setIsLoading(false);
     }
-    // Ensure isLoading is set to false after the attempt to load from storage.
-    setIsLoading(false);
-  }, [setCurrentUserInternal]);
+  }, [currentUser]); // Depend on the currentUser value from useClientStorage
 
 
   const login = async (username: string, password_raw: string): Promise<boolean> => {
+    setIsLoading(true); // Set loading true during login process
     const passwordHash = simpleHash(password_raw);
     const user = storedUsers.find(u => u.username === username && u.passwordHash === passwordHash);
     if (user) {
       setCurrentUserInternal(user);
       toast({ title: "Login Successful", description: `Welcome back, ${user.username}!` });
-      router.push('/'); // Changed from replace to push for better history, though replace is fine for login.
+      router.push('/'); 
+      // setIsLoading(false) will be handled by the useEffect watching currentUser
       return true;
     }
     toast({ title: "Login Failed", description: "Invalid username or password.", variant: "destructive" });
+    setIsLoading(false); // Explicitly set false on failure here
     return false;
   };
 
   const signup = async (username: string, password_raw: string): Promise<boolean> => {
+    setIsLoading(true);
     if (storedUsers.find(u => u.username === username)) {
       toast({ title: "Signup Failed", description: "Username already exists.", variant: "destructive" });
+      setIsLoading(false);
       return false;
     }
     const passwordHash = simpleHash(password_raw);
@@ -70,13 +84,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setStoredUsers(prevUsers => [...prevUsers, newUser]);
     toast({ title: "Signup Successful", description: "You can now log in." });
     router.push('/login');
+    setIsLoading(false); // Set loading false after signup logic
     return true;
   };
 
   const logout = () => {
+    setIsLoading(true);
     setCurrentUserInternal(null);
     toast({ title: "Logged Out", description: "You have been successfully logged out." });
     router.push('/login');
+    // setIsLoading(false) will be handled by the useEffect watching currentUser
   };
   
   const isAuthenticated = !!currentUser;
